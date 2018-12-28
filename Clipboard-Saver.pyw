@@ -61,7 +61,7 @@ def content_info(clip):
 
 
 # Output file
-save_dir = 'C:\\Users\\Avrohom\\Google Drive\\Clipboard-Saver\\'
+save_dir = '[your (non cloud) link goes here]'
 save_filename = (str(datetime.now().year) + '-' +
                  str(datetime.now().month) + '_' +
                  'Clipboard-Save.csv')
