@@ -7,7 +7,6 @@ import time
 import pyperclip
 
 from datetime import datetime
-from sys import getsizeof
 
 
 def csv_start():
