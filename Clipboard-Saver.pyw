@@ -14,7 +14,11 @@ def csv_start():
         with open(save_path, 'w', newline='') as log:
             file_writer = csv.writer(log, delimiter=',',
                                      quotechar='"', quoting=csv.QUOTE_ALL)
-            file_writer.writerow(['Timestamp', 'Clipboard', 'Type'])
+            file_writer.writerow(['Timestamp',
+                                  'Clipboard',
+                                  'Type',
+                                  'Length',
+                                  'Lines'])
 
 
 def csv_write(insert):
@@ -24,7 +28,15 @@ def csv_write(insert):
         file_writer.writerow(insert)
 
 
+def csv_del(clip):
+    delete = re.compile('^#del([0-9]+)$')
+    if delete.match(clip):
+        count = re.search('^#del([0-9]+)$', clip).group(1)
+        print(count)
+
+
 def discard_clip(clip):
+    # Used to discard a clip if its something we dont want to save
     blank = ''
     social_security = re.compile('^\d{3}-\d{2}-\d{4}|\d{3}\d{2}\d{4}$')
 
@@ -34,7 +46,6 @@ def discard_clip(clip):
     elif social_security.match(clip):
         # We dont want to save privet information
         return True
-    # TODO: Add bank account and credit card number recognition
     else:
         return False
 
@@ -48,6 +59,9 @@ def content_info(clip):
                      '+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))'
                      '[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,})')
     tel = re.compile('^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$')
+    # path = re.compile('^[a-zA-Z]:\\[\\\S|*\S]?.*$')
+    cmd = re.compile('^#((del|sleep)[0-9]+|kill)$')
+    sql = re.compile('^\[.+\]\.\[.+\]\.\[.+\]$')
 
     if email.match(clip):
         return 'email'
@@ -55,12 +69,36 @@ def content_info(clip):
         return 'url'
     elif tel.match(clip):
         return 'phone'
+    # elif path.match(clip):
+    #     return 'path'
+    elif sql.match(clip):
+        return 'sql'
+    elif cmd.match(clip):
+        return 'CMD'
     else:
         return ''
 
 
+def cmd(clip):
+    # Accepts and executes command 
+    delete = re.compile('^#del([0-9]+)$')
+    sleep = re.compile('^#sleep([0-9]+)$')
+    
+    if delete.match(clip):
+        # TODO add delete function 
+        # Not working
+        count = re.search('^#del([0-9]+)$', clip).group(1)
+        print('Del:', count)
+        # csv_del(count)
+    elif sleep.match(clip):
+        num = re.search('^#sleep([0-9]+)$', clip).group(1)
+        print('Sleeping:', num)
+        time.sleep(int(num))
+        return pyperclip.copy(clip + ': Done')
+
+
 # Output file
-save_dir = '[your (non cloud) link goes here]'
+save_dir = '[path to your folder]'
 save_filename = (str(datetime.now().year) + '-' +
                  str(datetime.now().month) + '_' +
                  'Clipboard-Save.csv')
@@ -74,14 +112,17 @@ while True:
     tmp_value = pyperclip.paste()
     try:
         if tmp_value != recent_value:
+            recent_value = cmd(tmp_value)
             if discard_clip(tmp_value) == False:
                 save = [datetime.now(),
                         tmp_value,
-                        content_info(tmp_value)]
+                        content_info(tmp_value),
+                        len(tmp_value),
+                        tmp_value.count('\n') + 1]
                 csv_write(save)
             print('Clip Saved: Length = ' + str(len(tmp_value)))
             recent_value = tmp_value
     except:
-        continue
         print('Something Failed')
+        continue
     time.sleep(0.1)
