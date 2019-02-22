@@ -1,4 +1,4 @@
-# Save the contents of the clipboard when it changes
+'''Save the contents of the clipboard when it changes'''
 
 import os
 import re
@@ -9,7 +9,8 @@ import pyperclip
 from datetime import datetime
 
 
-def csv_start():
+def csv_start(save_path):
+    '''Creates a .csv file if one does not exist'''
     if not os.path.isfile(save_path):
         with open(save_path, 'w', newline='') as log:
             file_writer = csv.writer(log, delimiter=',',
@@ -22,36 +23,43 @@ def csv_start():
 
 
 def csv_write(insert):
+    '''Writes a list of strings to the .csv file'''
     with open(save_path, 'a', newline='') as log:
         file_writer = csv.writer(log, delimiter=',',
                                  quotechar='"', quoting=csv.QUOTE_ALL)
         file_writer.writerow(insert)
 
 
-def csv_del(clip):
-    delete = re.compile('^#del([0-9]+)$')
-    if delete.match(clip):
-        count = re.search('^#del([0-9]+)$', clip).group(1)
-        print(count)
-
-
 def discard_clip(clip):
-    # Used to discard a clip if its something we dont want to save
+    '''
+    Discards a clip if it matches the format
+    of something we dont want to save
+    '''
     blank = ''
     social_security = re.compile('^\d{3}-\d{2}-\d{4}|\d{3}\d{2}\d{4}$')
 
     if clip.strip() == blank:
         # No need to save blank text
+        print('Clip rejected: No text')
         return True
     elif social_security.match(clip):
         # We dont want to save privet information
+        print('Clip rejected: Social Security')
+        return True
+    elif len(clip) > 40000:
+        # Too much text
+        print('Clip rejected: Too long')
+        return True
+    elif clip.count('\n') > 4000:
+        # Too many lines
+        print('Clip rejected: Too many lines')
         return True
     else:
         return False
 
 
 def content_info(clip):
-    # Checks the content against guidelines to make sure we want to save it
+    '''Checks the clip for a known value type, returns known value name'''
     email = re.compile('^[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+$')
     url = re.compile('(https?:\/\/(?:www\.|(?!www))'
                      '[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]'
@@ -59,7 +67,6 @@ def content_info(clip):
                      '+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))'
                      '[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,})')
     tel = re.compile('^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$')
-    # path = re.compile('^[a-zA-Z]:\\[\\\S|*\S]?.*$')
     cmd = re.compile('^#((del|sleep)[0-9]+|kill)$')
     sql = re.compile('^\[.+\]\.\[.+\]\.\[.+\]$')
 
@@ -69,8 +76,6 @@ def content_info(clip):
         return 'url'
     elif tel.match(clip):
         return 'phone'
-    # elif path.match(clip):
-    #     return 'path'
     elif sql.match(clip):
         return 'sql'
     elif cmd.match(clip):
@@ -80,17 +85,11 @@ def content_info(clip):
 
 
 def cmd(clip):
-    # Accepts and executes command 
-    delete = re.compile('^#del([0-9]+)$')
+    '''Accepts and executes a specially formatted command'''
     sleep = re.compile('^#sleep([0-9]+)$')
-    
-    if delete.match(clip):
-        # TODO add delete function 
-        # Not working
-        count = re.search('^#del([0-9]+)$', clip).group(1)
-        print('Del:', count)
-        # csv_del(count)
-    elif sleep.match(clip):
+
+    if sleep.match(clip):
+        # Ignore any copied text for the specified number of seconds
         num = re.search('^#sleep([0-9]+)$', clip).group(1)
         print('Sleeping:', num)
         time.sleep(int(num))
@@ -98,31 +97,35 @@ def cmd(clip):
 
 
 # Output file
-save_dir = '[path to your folder]'
+save_dir = r'M:\Dropbox\Sandbox\Clipboard-Saver\output'
 save_filename = (str(datetime.now().year) + '-' +
                  str(datetime.now().month) + '_' +
                  'Clipboard-Save.csv')
 save_path = os.path.join(save_dir, save_filename)
-csv_start()
 
-# Current value
+# Current clipboard value
 recent_value = pyperclip.paste()
 
 while True:
+    # Create the .csv file if it does not exist
+    csv_start(save_path)
+
+    # New clipboard value
     tmp_value = pyperclip.paste()
+
     try:
         if tmp_value != recent_value:
             recent_value = cmd(tmp_value)
             if discard_clip(tmp_value) == False:
-                save = [datetime.now(),
-                        tmp_value,
-                        content_info(tmp_value),
-                        len(tmp_value),
-                        tmp_value.count('\n') + 1]
-                csv_write(save)
-            print('Clip Saved: Length = ' + str(len(tmp_value)))
+                save_value = [datetime.now(),
+                              tmp_value,
+                              content_info(tmp_value),
+                              len(tmp_value),
+                              tmp_value.count('\n') + 1]
+                csv_write(save_value)
+                print('Clip Saved: Length = ' + str(len(tmp_value)))
             recent_value = tmp_value
-    except:
-        print('Something Failed')
-        continue
+    except Exception as e:
+        print(str(e))
+        recent_value = tmp_value
     time.sleep(0.1)
