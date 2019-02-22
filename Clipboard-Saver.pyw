@@ -1,4 +1,4 @@
-'''Save the contents of the clipboard when it changes'''
+"""Save the contents of the clipboard when it changes"""
 
 import os
 import re
@@ -9,10 +9,10 @@ import pyperclip
 from datetime import datetime
 
 
-def csv_start(save_path):
-    '''Creates a .csv file if one does not exist'''
-    if not os.path.isfile(save_path):
-        with open(save_path, 'w', newline='') as log:
+def csv_start(path):
+    """Creates a .csv file if one does not exist"""
+    if not os.path.isfile(path):
+        with open(path, 'w', newline='') as log:
             file_writer = csv.writer(log, delimiter=',',
                                      quotechar='"', quoting=csv.QUOTE_ALL)
             file_writer.writerow(['Timestamp',
@@ -23,7 +23,7 @@ def csv_start(save_path):
 
 
 def csv_write(insert):
-    '''Writes a list of strings to the .csv file'''
+    """Writes a list of strings to the .csv file"""
     with open(save_path, 'a', newline='') as log:
         file_writer = csv.writer(log, delimiter=',',
                                  quotechar='"', quoting=csv.QUOTE_ALL)
@@ -31,19 +31,19 @@ def csv_write(insert):
 
 
 def discard_clip(clip):
-    '''
+    """
     Discards a clip if it matches the format
-    of something we dont want to save
-    '''
+    of something we don't want to save
+    """
     blank = ''
-    social_security = re.compile('^\d{3}-\d{2}-\d{4}|\d{3}\d{2}\d{4}$')
+    social_security = re.compile(r'^\d{3}-\d{2}-\d{4}|\d{3}\d{2}\d{4}$')
 
     if clip.strip() == blank:
         # No need to save blank text
         print('Clip rejected: No text')
         return True
     elif social_security.match(clip):
-        # We dont want to save privet information
+        # We don't want to save privet information
         print('Clip rejected: Social Security')
         return True
     elif len(clip) > 40000:
@@ -59,16 +59,16 @@ def discard_clip(clip):
 
 
 def content_info(clip):
-    '''Checks the clip for a known value type, returns known value name'''
-    email = re.compile('^[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+$')
-    url = re.compile('(https?:\/\/(?:www\.|(?!www))'
-                     '[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]'
-                     '\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]'
-                     '+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))'
-                     '[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,})')
-    tel = re.compile('^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$')
-    cmd = re.compile('^#((del|sleep)[0-9]+|kill)$')
-    sql = re.compile('^\[.+\]\.\[.+\]\.\[.+\]$')
+    """Checks the clip for a known value type, returns known value name"""
+    email = re.compile(r'^[a-zA-Z0-9.-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]+$')
+    url = re.compile(r'(https?:\/\/(?:www\.|(?!www))'
+                     r'[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]'
+                     r'\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]'
+                     r'+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))'
+                     r'[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,})')
+    tel = re.compile(r'^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$')
+    command = re.compile(r'^#((del|sleep)[0-9]+|kill)$')
+    sql = re.compile(r'^\[.+\]\.\[.+\]\.\[.+\]$')
 
     if email.match(clip):
         return 'email'
@@ -78,19 +78,19 @@ def content_info(clip):
         return 'phone'
     elif sql.match(clip):
         return 'sql'
-    elif cmd.match(clip):
+    elif command.match(clip):
         return 'CMD'
     else:
         return ''
 
 
 def cmd(clip):
-    '''Accepts and executes a specially formatted command'''
-    sleep = re.compile('^#sleep([0-9]+)$')
+    """Accepts and executes a specially formatted command"""
+    sleep = re.compile(r'^#sleep([0-9]+)$')
 
     if sleep.match(clip):
         # Ignore any copied text for the specified number of seconds
-        num = re.search('^#sleep([0-9]+)$', clip).group(1)
+        num = re.search(r'^#sleep([0-9]+)$', clip).group(1)
         print('Sleeping:', num)
         time.sleep(int(num))
         return pyperclip.copy(clip + ': Done')
@@ -116,7 +116,7 @@ while True:
     try:
         if tmp_value != recent_value:
             recent_value = cmd(tmp_value)
-            if discard_clip(tmp_value) == False:
+            if not discard_clip(tmp_value):
                 save_value = [datetime.now(),
                               tmp_value,
                               content_info(tmp_value),
