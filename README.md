@@ -12,6 +12,13 @@ If you do use this, resist the urge to make the output available on the cloud.
 
 To make this more safe, adjust the `discard_clip()` function to only save specific types of data such as phone numbers, addresses, etc
 
+## Commands
+You can send a number of commands to be executed. If the command returns text, it will do so by resetting your clipboard.
+- `#sleep30` Use this command to stop the script from working for a specified number of seconds. Useful to stop the
+script from saving something during the sleep.
+- `#crazy-test text` Transforms the given text after the `-` into annoying meme worthy text. `test text` becomes `tEsT tExT`. Wonderful!
+- `#.command-test text` `command` is a string manipulation string 
+
 ## Why you might find this useful:
 If you know that in the background everything you copy is saved, you can purposely copy things to save them for later. Addresses, phone numbers, jokes, a link to something to look at later, etc.
 
