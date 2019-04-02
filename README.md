@@ -1,9 +1,20 @@
 # Clipboard Saver
 ###### Save the contents of your clipboard every time it changes to a csv for later reference.
+###### Send commands to python by copying a command string to the clipboard and receiving results in the clipboard.
+
 
 ## Use
-Change the `save-dir` variable to the path to where you want your .csv saved.
+Change the `save-dir` variable to the path to the location you want your .csv saved.
 A new .csv file will be created for each month to keep the file size manageable.
+
+Change the file extension to `.pyw` to run the script in the background.
+
+## Commands
+You can send a number of commands to be executed. If the command returns text, it will do so by resetting your clipboard.
+- `#sleep30` Use this command to stop the script from working for a specified number of seconds. Useful to stop the
+script from saving something during the sleep.
+- `#crazy-test text` Transforms the given text after the `-` into annoying meme worthy text. `test text` becomes `tEsT tExT`. Wonderful!
+- `#.command-test text` `command` is a string manipulation string 
 
 ## Is this a good idea?
 No, not really.
@@ -12,12 +23,6 @@ If you do use this, resist the urge to make the output available on the cloud.
 
 To make this more safe, adjust the `discard_clip()` function to only save specific types of data such as phone numbers, addresses, etc
 
-## Commands
-You can send a number of commands to be executed. If the command returns text, it will do so by resetting your clipboard.
-- `#sleep30` Use this command to stop the script from working for a specified number of seconds. Useful to stop the
-script from saving something during the sleep.
-- `#crazy-test text` Transforms the given text after the `-` into annoying meme worthy text. `test text` becomes `tEsT tExT`. Wonderful!
-- `#.command-test text` `command` is a string manipulation string 
 
 ## Why you might find this useful:
 If you know that in the background everything you copy is saved, you can purposely copy things to save them for later. Addresses, phone numbers, jokes, a link to something to look at later, etc.
